@@ -114,3 +114,30 @@ if "debug_toolbar" not in INSTALLED_APPS:
     INSTALLED_APPS.append("debug_toolbar")
 if "debug_toolbar.middleware.DebugToolbarMiddleware" not in MIDDLEWARE:
     MIDDLEWARE.insert(0, "debug_toolbar.middleware.DebugToolbarMiddleware")
+
+PLUGINS = ["nautobot_plugin_nornir", "nautobot_golden_config"]
+
+PLUGINS_CONFIG = {
+    "nautobot_plugin_nornir": {
+        "nornir_settings": {
+            "credentials": "nautobot_plugin_nornir.plugins.credentials.env_vars.CredentialsEnvVars",
+            "runner": {
+                "plugin": "threaded",
+                "options": {
+                    "num_workers": 20,
+                },
+            },
+        },
+    },
+    "nautobot_golden_config": {
+        "allowed_os": os.environ.get("ALLOWED_OS", "all").split(","),
+        "per_feature_bar_width": float(os.environ.get("PER_FEATURE_BAR_WIDTH", 0.15)),
+        "per_feature_width": int(os.environ.get("PER_FEATURE_WIDTH", 13)),
+        "per_feature_height": int(os.environ.get("PER_FEATURE_HEIGHT", 4)),
+        "enable_backup": is_truthy(os.environ.get("ENABLE_BACKUP", True)),
+        "enable_compliance": is_truthy(os.environ.get("ENABLE_COMPLIANCE", True)),
+        "enable_intended": is_truthy(os.environ.get("ENABLE_INTENDED", True)),
+        "enable_sotagg": is_truthy(os.environ.get("ENABLE_SOTAGG", True)),
+        "sot_agg_transposer": os.environ.get("SOT_AGG_TRANSPOSER"),
+    },
+}
