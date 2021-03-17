@@ -15,8 +15,9 @@ limitations under the License.
 import os
 from invoke import task
 
+PYTHON_VER_DEFAULT = "3.7"
 
-PYTHON_VER = os.getenv("PYTHON_VER", "3.7")
+PYTHON_VER = os.getenv("PYTHON_VER", PYTHON_VER_DEFAULT)
 
 COMPOSE_DIR = os.path.join(os.path.dirname(__file__), "development/")
 COMPOSE_FILE = os.path.join(COMPOSE_DIR, "docker-compose.yml")
@@ -27,6 +28,48 @@ if os.path.isfile(COMPOSE_OVERRIDE_FILE):
     COMPOSE_COMMAND += f' -f "{COMPOSE_OVERRIDE_FILE}"'
 
 NAUTOBOT_ROOT = "/opt/nautobot/"
+
+
+# ------------------------------------------------------------------------------
+# UTILS
+# ------------------------------------------------------------------------------
+def running_nautobot_python_versions(context):
+    """Get a list of running nautobot container python_ver
+
+    Args:
+        context (obj): Used to run specific commands
+
+    Returns:
+        List[str]: List of python versions found
+    """
+    python_versions = []
+    container_image_names = context.run(
+        "docker ps -f name=nautobot --format='{{json .Image }}'", pty=True, hide="out"
+    ).stdout
+    for dockerimage in container_image_names.splitlines():
+        searchfor = "nautobot-py"
+        parts = dockerimage.splitlines()[0].split("/")
+        if len(parts) == 2 and parts[1].find(searchfor) > -1:
+            python_versions += [parts[1][len(searchfor) :]]
+    return python_versions
+
+
+def default_python_ver(context, python_ver=PYTHON_VER):
+    """Default 'python_ver' for running container
+    Args:
+        context (obj): Used to run specific commands
+        python_ver (str): Will use the Python version docker image to build from
+    Returns:
+        str: python version number e.g. '3.8.5'
+    """
+    py_versions = running_nautobot_python_versions(context)
+    if len(py_versions) == 1:
+        return py_versions[0]
+    else:
+        if len(py_versions) > 1:
+            msg = "Running Nautobot Containers:" + os.linesep
+            msg += os.linesep + "   ".join(py_versions)
+    return python_ver
 
 
 # ------------------------------------------------------------------------------
@@ -95,7 +138,7 @@ def stop(context, python_ver=PYTHON_VER):
 
     context.run(
         f"{COMPOSE_COMMAND} stop",
-        env={"PYTHON_VER": python_ver},
+        env={"PYTHON_VER": default_python_ver(context, python_ver)},
     )
 
 
@@ -123,7 +166,7 @@ def vscode(context, python_ver=PYTHON_VER):
     Args:
         context (obj): Used to run specific commands
     """
-    context.run("code nautobot.code-workspace", env={"PYTHON_VER": python_ver})
+    context.run("code nautobot.code-workspace", env={"PYTHON_VER": default_python_ver(context, python_ver)})
 
 
 # ------------------------------------------------------------------------------
@@ -139,7 +182,7 @@ def nbshell(context, python_ver=PYTHON_VER):
     """
     context.run(
         f"{COMPOSE_COMMAND} exec nautobot nautobot-server nbshell",
-        env={"PYTHON_VER": python_ver},
+        env={"PYTHON_VER": default_python_ver(context, python_ver)},
         pty=True,
     )
 
@@ -154,7 +197,7 @@ def cli(context, python_ver=PYTHON_VER):
     """
     context.run(
         f"{COMPOSE_COMMAND} exec nautobot bash",
-        env={"PYTHON_VER": python_ver},
+        env={"PYTHON_VER": default_python_ver(context, python_ver)},
         pty=True,
     )
 
@@ -170,7 +213,7 @@ def createsuperuser(context, user="admin", python_ver=PYTHON_VER):
     """
     context.run(
         f"{COMPOSE_COMMAND} run nautobot nautobot-server createsuperuser --username {user}",
-        env={"PYTHON_VER": python_ver},
+        env={"PYTHON_VER": default_python_ver(context, python_ver)},
         pty=True,
     )
 
@@ -187,12 +230,12 @@ def makemigrations(context, name="", python_ver=PYTHON_VER):
     if name:
         context.run(
             f"{COMPOSE_COMMAND} run nautobot nautobot-server makemigrations --name {name}",
-            env={"PYTHON_VER": python_ver},
+            env={"PYTHON_VER": default_python_ver(context, python_ver)},
         )
     else:
         context.run(
             f"{COMPOSE_COMMAND} run nautobot nautobot-server makemigrations",
-            env={"PYTHON_VER": python_ver},
+            env={"PYTHON_VER": default_python_ver(context, python_ver)},
         )
 
 
@@ -206,7 +249,7 @@ def migrate(context, python_ver=PYTHON_VER):
     """
     context.run(
         f"{COMPOSE_COMMAND} run nautobot nautobot-server migrate",
-        env={"PYTHON_VER": python_ver},
+        env={"PYTHON_VER": default_python_ver(context, python_ver)},
     )
 
 
@@ -223,7 +266,7 @@ def black(context, python_ver=PYTHON_VER):
     """
     context.run(
         f"{COMPOSE_COMMAND} run nautobot black --check --diff contrib/ development/ nautobot/ tasks.py",
-        env={"PYTHON_VER": python_ver},
+        env={"PYTHON_VER": default_python_ver(context, python_ver)},
         pty=True,
     )
 
@@ -238,7 +281,7 @@ def flake8(context, python_ver=PYTHON_VER):
     """
     context.run(
         f"{COMPOSE_COMMAND} run nautobot flake8 contrib/ development/ nautobot/ tasks.py",
-        env={"PYTHON_VER": python_ver},
+        env={"PYTHON_VER": default_python_ver(context, python_ver)},
         pty=True,
     )
 
@@ -254,7 +297,7 @@ def coverage_run(context, dir="./", python_ver=PYTHON_VER):
     """
     context.run(
         f"{COMPOSE_COMMAND} run nautobot" f" coverage run scripts/test_runner.py test {dir}",
-        env={"PYTHON_VER": python_ver},
+        env={"PYTHON_VER": default_python_ver(context, python_ver)},
         pty=True,
     )
 
@@ -269,7 +312,7 @@ def coverage_report(context, python_ver=PYTHON_VER):
     """
     context.run(
         f"{COMPOSE_COMMAND} run nautobot" f" coverage report --skip-covered --omit *migrations*",
-        env={"PYTHON_VER": python_ver},
+        env={"PYTHON_VER": default_python_ver(context, python_ver)},
         pty=True,
     )
 

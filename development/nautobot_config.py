@@ -95,9 +95,11 @@ RQ_QUEUES = {
     },
 }
 
+
 # Base URL path if accessing Nautobot within a directory. For example, if installed at https://example.com/nautobot/, set:
 # BASE_PATH = 'nautobot/'
-BASE_PATH = os.environ.get("BASE_PATH", "")
+BASE_PATH = os.environ.get("BASE_PATH", "nautobot/")
+LOGIN_URL = f"/{BASE_PATH}login/"
 
 # REDIS CACHEOPS
 CACHEOPS_REDIS = f"redis://:{os.getenv('REDIS_PASSWORD')}@{os.getenv('REDIS_HOST')}:{os.getenv('REDIS_PORT')}/2"
@@ -114,3 +116,38 @@ if "debug_toolbar" not in INSTALLED_APPS:
     INSTALLED_APPS.append("debug_toolbar")
 if "debug_toolbar.middleware.DebugToolbarMiddleware" not in MIDDLEWARE:
     MIDDLEWARE.insert(0, "debug_toolbar.middleware.DebugToolbarMiddleware")
+
+# In your configuration.py
+PLUGINS = ["nautobot_plugin_nornir", "nautobot_golden_config", "nautobot_device_onboarding"]
+
+PLUGINS_CONFIG = {
+    "nautobot_plugin_nornir": {
+        "nornir_settings": {
+            "credentials": "nautobot_plugin_nornir.plugins.credentials.env_vars.CredentialsEnvVars",
+            "runner": {
+                "plugin": "threaded",
+                "options": {
+                    "num_workers": 100,
+                },
+            },
+        },
+    },
+    "nautobot_golden_config": {
+        "allowed_os": os.environ.get("ALLOWED_OS", "all").split(","),
+        "per_feature_bar_width": float(os.environ.get("PER_FEATURE_BAR_WIDTH", 0.15)),
+        "per_feature_width": int(os.environ.get("PER_FEATURE_WIDTH", 13)),
+        "per_feature_height": int(os.environ.get("PER_FEATURE_HEIGHT", 4)),
+        "enable_backup": is_truthy(os.environ.get("ENABLE_BACKUP", True)),
+        "enable_compliance": is_truthy(os.environ.get("ENABLE_COMPLIANCE", True)),
+        "enable_intended": is_truthy(os.environ.get("ENABLE_INTENDED", True)),
+        "enable_sotagg": is_truthy(os.environ.get("ENABLE_SOTAGG", True)),
+        "sot_agg_transposer": os.environ.get("SOT_AGG_TRANSPOSER"),
+    },
+    "nautobot_device_onboarding": {
+        # see: https://github.com/nautobot/nautobot-plugin-device-onboarding
+        # "onboarding_extensions_map": {
+        #     <Napalm Driver Name>: <Loadable Python Module>
+        # }
+        "object_match_strategy": "strict"  # "strict" or "loose"
+    },
+}

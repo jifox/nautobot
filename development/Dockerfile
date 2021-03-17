@@ -1,4 +1,4 @@
-ARG PYTHON_VER=3.7
+ARG PYTHON_VER=3.6
 FROM python:${PYTHON_VER}
 
 ENV PYTHONUNBUFFERED 1
@@ -44,6 +44,5 @@ RUN poetry install
 
 # Install additional requirements from local_requirements.txt
 RUN if [ -f local_requirements.txt ] ; then cat local_requirements.txt | grep -E '^[^# ]' | cut -d= -f1 | xargs -n 1 poetry add ; fi
-
 
 ENTRYPOINT ["/tmp/nautobot/docker-entrypoint.sh"]
