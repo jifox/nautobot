@@ -15,9 +15,8 @@ limitations under the License.
 import os
 from invoke import task
 
-PYTHON_VER_DEFAULT = "3.7"
 
-PYTHON_VER = os.getenv("PYTHON_VER", PYTHON_VER_DEFAULT)
+PYTHON_VER = os.getenv("PYTHON_VER", "3.7")
 
 COMPOSE_DIR = os.path.join(os.path.dirname(__file__), "development/")
 COMPOSE_FILE = os.path.join(COMPOSE_DIR, "docker-compose.yml")
@@ -43,14 +42,17 @@ def running_nautobot_python_versions(context):
         List[str]: List of python versions found
     """
     python_versions = []
-    container_image_names = context.run(
-        "docker ps -f name=nautobot --format='{{json .Image }}'", pty=True, hide="out"
-    ).stdout
-    for dockerimage in container_image_names.splitlines():
-        searchfor = "nautobot-py"
-        parts = dockerimage.splitlines()[0].split("/")
-        if len(parts) == 2 and parts[1].find(searchfor) > -1:
-            python_versions += [parts[1][len(searchfor) :]]
+    try:
+        container_image_names = context.run(
+            "docker ps -f name=nautobot --format='{{ .Image }}'", pty=True, hide="out"
+        ).stdout
+        for dockerimage in container_image_names.splitlines():
+            searchfor = "nautobot-py"
+            parts = dockerimage.splitlines()[0].split("/")
+            if len(parts) == 2 and parts[1].find(searchfor) > -1:
+                python_versions += [parts[1][len(searchfor) :]]
+    except:  # noqa: E722
+        pass
     return python_versions
 
 
@@ -67,9 +69,18 @@ def default_python_ver(context, python_ver=PYTHON_VER):
         return py_versions[0]
     else:
         if len(py_versions) > 1:
-            msg = "Running Nautobot Containers:" + os.linesep
-            msg += os.linesep + "   ".join(py_versions)
+            print("Python version of running Nautobot containers:")
+            for ver in py_versions:
+                print("  -", ver)
+            if PYTHON_VER not in py_versions:
+                print("Default Python version:", PYTHON_VER)
     return python_ver
+
+
+@task
+def print_python_ver(context, python_ver=PYTHON_VER):
+    """Print default --python-ver"""
+    print(default_python_ver(context, PYTHON_VER))
 
 
 # ------------------------------------------------------------------------------
