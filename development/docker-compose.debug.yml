@@ -1,13 +1,17 @@
 # Used to integrate with Microsoft VS Code dev containers feature.
 ---
-version: "3"
+version: "3.9"
 services:
   nautobot:
     command: "sleep infinity"
+    env_file:
+      - "override.env"
     volumes:
       - ./nautobot_config.py:/opt/nautobot/nautobot_config.py
       - ../:/source
   worker:
+    env_file:
+      - "override.env"
     volumes:
       - ./nautobot_config.py:/opt/nautobot/nautobot_config.py
       - ../:/source

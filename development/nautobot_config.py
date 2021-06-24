@@ -90,7 +90,7 @@ CACHES = {
 # REDIS CACHEOPS
 CACHEOPS_REDIS = parse_redis_connection(redis_database=1)
 
-HIDE_RESTRICTED_UI = os.environ.get("HIDE_RESTRICTED_UI", False)
+HIDE_RESTRICTED_UI = is_truthy(os.environ.get("HIDE_RESTRICTED_UI", False))
 
 SECRET_KEY = os.environ.get("NAUTOBOT_SECRET_KEY", "")
 
@@ -102,7 +102,6 @@ if "debug_toolbar" not in INSTALLED_APPS:
 if "debug_toolbar.middleware.DebugToolbarMiddleware" not in MIDDLEWARE:
     MIDDLEWARE.insert(0, "debug_toolbar.middleware.DebugToolbarMiddleware")
 
-
 NAPALM_USERNAME = os.getenv("NAUTOBOT_NAPALM_USERNAME", "")
 NAPALM_PASSWORD = os.getenv("NAUTOBOT_NAPALM_PASSWORD", "")
-NAPALM_ARGS = {'secret': NAPALM_PASSWORD}
+NAPALM_ARGS = {"secret": NAPALM_PASSWORD}
