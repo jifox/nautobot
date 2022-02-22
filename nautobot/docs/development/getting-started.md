@@ -205,72 +205,6 @@ Additional useful commands for the development environment:
 
 Proceed to the [Working in your Development Environment](#working-in-your-development-environment) section
 
-### MS Visual Studio Code - Debugging Inside Development Container
-
-For running the nautobot-server in **Visual Studio Code debugger**, add the line `command: sleep infinity` to the file `docker-compose.override.yml`. This prevents starting the http server and keeps the container up and running.
-
-1. Update docker-compose.override.yml
-
-    ```bash
-    edit development/docker-compose.override.yml
-    ```
-
-    ```
-    ---
-    services:
-      nautobot:
-        env_file:
-          - "override.env"
-        command: sleep infinity
-    ```
-
-2. Start the debug container
-   
-   ```bash
-   invoke debug
-   ```
-
-3. Attach Visual Studio Code to Running Container
-
-   Right click in Docker-extension (`ms-azuretools.vscode-docker`) in section 'CONTAINERS' the `development_nautobot_1` container and select 'Attach Visual Studio Code' menu item.
-
-4. Setup Launch Configuration
-
-   To run the server open the folder `/opt/nautobot` in vscode and add the debug configuration in `launch.json`.
-
-   ```json
-   {
-     "folders": [
-       {
-         "path": "."
-       }
-     ],
-     "settings": {
-       "python.linting.pylintEnabled": true,
-       "python.linting.enabled": true,
-       "pythonTestExplorer.testFramework": "pytest",
-       "python.pythonPath": "/usr/local/bin/python"
-     },
-     "launch": {
-       "version": "0.2.0",
-       "configurations": [
-         {
-           "name": "Python: Nautobot",
-           "type": "python",
-           "request": "launch",
-           "program": "manage.py",
-           "console": "integratedTerminal",
-           "args": [
-             "runserver",
-             "0.0.0.0:8000"
-           ],
-           "django": true
-         }
-       ]
-     }
-   }
-   ```
-
 ### Python Virtual Environment Workflow
 
 This workflow uses Python and Poetry to work with your development environment locally. It requires that you install the required system dependencies on your system yourself.
@@ -290,7 +224,7 @@ There are a few things you'll need:
 You may install Poetry in your user environment by running:
 
 ```no-highlight
-$ curl -sSL https://install.python-poetry.org | python3 -
+$ curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -
 ```
 
 For detailed installation instructions, please see the [official Poetry installation guide](https://python-poetry.org/docs/#installation).
