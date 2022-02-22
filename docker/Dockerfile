@@ -21,7 +21,7 @@ HEALTHCHECK --interval=5s --timeout=5s --start-period=5s --retries=1 CMD curl --
 
 ################################ Stage: dev
 # The dev container is used for development purposes but also to build the .whl for the final image
-# nautobot will be installed in editable mode in /source 
+# nautobot will be installed in editable mode in /source
 FROM base as dev
 
 # Modify the PATH here because otherwise poetry fails 100% of the time. WAT??
@@ -85,12 +85,14 @@ ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["nautobot-server", "runserver", "0.0.0.0:8080", "--insecure"]
 
 # Copy nautobot source and poetry info to container to reduce cache invalidations
-COPY poetry.lock pyproject.toml README.md /source/
+COPY poetry.lock pyproject.toml README.md plugin_requirements.txt /source/
 COPY nautobot /source/nautobot
 
 # Build the whl for use in the final container and install for the dev container
 RUN poetry build && \
     poetry install --no-ansi --extras all
+
+RUN pip install -r plugin_requirements.txt
 
 ################################ Stage: cleaninstall
 # Build an image with required dependencies to pull the installation from

@@ -7,7 +7,7 @@ from nautobot.core.settings_funcs import is_truthy, parse_redis_connection
 
 
 #
-# Misc. settings
+# Misc. settings.
 #
 
 ALLOWED_HOSTS = os.getenv("NAUTOBOT_ALLOWED_HOSTS", "").split(" ")
